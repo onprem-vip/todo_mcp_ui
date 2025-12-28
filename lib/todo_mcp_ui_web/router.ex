@@ -18,6 +18,10 @@ defmodule TodoMcpUiWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    live "/tasks", TaskLive.Index, :index
+    live "/tasks/new", TaskLive.Index, :new
+    live "/tasks/:id/edit", TaskLive.Index, :edit
   end
 
   # Other scopes may use custom stacks.

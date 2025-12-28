@@ -1,0 +1,114 @@
+<div id="container" class="mx-auto max-w-[120vh]">
+    <.header>
+    <h1 class="flex text-base-content text-3xl font-semibold leading-relaxed">
+        Task Manager
+    </h1>
+    <h5 class="">Organize your day with AI assistance</h5>
+    <!--:actions>
+        <.link patch={~p"/tasks/new"} class="">
+        <.button class="btn btn-soft">New Task</.button>
+        </.link>
+    </:actions-->
+    </.header>
+
+    <form
+        id="form"
+        class="prose prose-md flex flex-col items-center justify-center mx-auto max-w-full bg-gray-100 text-gray-800 p-2"
+        phx-submit="add_task"
+        phx-hook="VoixEventHandler"
+    >
+    <div id="add_task_id" class="flex items-center gap-4">
+        <.input id="text_id" field={@form[:text]} type="text" value={@add_task_text} label="" placeholder="What need to be done?" class="input input-bordered h-10 mt-2 min-w-[50vh]"/>
+        <.button class="btn btn-soft h-10" type="submit">Add Task</.button>
+        <.tool mcp={@todo_mcp} name="add_task" />
+    </div>
+    <ul id="tasks" phx-update="stream" class="list bg-base-100 rounded-box shadow-md">
+        <%= for {dom_id, %{id: id, task: task}} <- @streams.tasks do %>
+            <li id={dom_id} class="list-row min-w-[100vh]">
+                <div>
+                    <.input field={@form[:"completed_#{id}"]} type="checkbox" phx-change="update_task" value={task.completed} label="" />
+                </div>
+                <div>
+                    <div class={complete_task_text(task.completed)}>{task.text}</div>
+                    <div class={priority_badge(task.priority, task.completed)}>
+                        {task.priority}
+                    </div>
+                    <div class={due_date_text(task.completed)}>
+                        {due_date_in_days(task.due_date)}
+                    </div>
+                    <div class={notes_tooltip(task.notes)} data-tip={task.notes}>
+                        📝 Notes
+                    </div>
+                </div>
+                <div class="flex">
+                    <.link class="inline-flex" patch={~p"/tasks/#{task}/edit"}>
+                        <svg
+                        class="w-6 h-6 text-gray-800 dark:text-white"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        >
+                        <path
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"
+                        />
+                        </svg>
+                    </.link>
+                    <.link
+                        phx-click={JS.push("delete", value: %{id: task.id}) |> hide("##{dom_id}")}
+                        data-confirm="Are you sure?"
+                    >
+                        <svg
+                        class="w-6 h-6 text-gray-800 dark:text-white"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        >
+                        <path
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        />
+                        </svg>
+                    </.link>
+                </div>
+                <.tool mcp={@todo_mcp} name="complete_task" item_id={id} item_label={task.text} />
+                <.tool mcp={@todo_mcp} name="remove_task" item_id={id} item_label={task.text} />
+
+            </li>
+        <% end %>
+    </ul>
+    <.context name="task_list" content={@stats} />
+    <.context name="current_date" content={@current_date} />
+
+    </form>
+</div>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="task-modal"
+  show
+  on_cancel={JS.patch(~p"/tasks")}
+>
+  <.live_component
+    :if={@live_action in [:new, :edit]}
+    module={TodoAppWeb.TaskLive.FormComponent}
+    id={@task.id || :new}
+    title={@page_title}
+    action={@live_action}
+    task={@task}
+    uri={@uri}
+    patch={~p"/tasks"}
+  />
+</.modal>

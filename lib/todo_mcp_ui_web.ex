@@ -51,6 +51,7 @@ defmodule TodoMcpUiWeb do
   def live_view do
     quote do
       use Phoenix.LiveView
+      import ExVoix.Html.Components
 
       unquote(html_helpers())
     end
