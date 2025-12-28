@@ -17,6 +17,12 @@ defmodule TodoMcpUi.Application do
       # Start a worker by calling: TodoMcpUi.Worker.start_link(arg)
       # {TodoMcpUi.Worker, arg},
       # Start to serve requests, typically the last entry
+      {TodoMcpUiMCP.Clients.TodoAppMCP,
+          transport:
+            {:streamable_http,
+             base_url:
+               Application.get_env(:todo_mcp_ui, TodoMcpUiMCP.Clients.TodoAppMCP)[:base_url]}},
+      {TodoMcpUiMCP.Runners.KeepAlive, [mcp: TodoMcpUiMCP.Clients.TodoAppMCP, interval: 15_000]},
       TodoMcpUiWeb.Endpoint
     ]
 

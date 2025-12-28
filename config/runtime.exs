@@ -23,6 +23,8 @@ end
 config :todo_mcp_ui, TodoMcpUiWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+config :todo_mcp_ui, TodoMcpUiMCP.Clients.TodoAppMCP, base_url: "http://localhost:4002"
+
 if config_env() == :prod do
   database_path =
     System.get_env("DATABASE_PATH") ||
