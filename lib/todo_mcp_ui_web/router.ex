@@ -21,9 +21,11 @@ defmodule TodoMcpUiWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", TodoMcpUiWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", TodoMcpUiWeb do
+    pipe_through :api
+
+    resources "/tasks", TaskController, except: [:new, :edit]
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:todo_mcp_ui, :dev_routes) do

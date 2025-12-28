@@ -24,12 +24,16 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/todo_mcp_ui"
 import topbar from "../vendor/topbar"
+import VoixEventHandler from '../../deps/ex_voix/lib/ex_voix/js/voix_event_handler';
+
+let Hooks = {};
+Hooks.VoixEventHandler = VoixEventHandler;
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...Hooks, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits
