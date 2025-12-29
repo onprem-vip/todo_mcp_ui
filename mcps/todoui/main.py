@@ -1,6 +1,7 @@
 import httpx
 from fastmcp import FastMCP
 from pydantic import Field
+from datetime import date, datetime, timedelta
 
 # Initialize the FastMCP server
 mcp = FastMCP("TodoAppMCP", streamable_http_path='/mcp')
@@ -36,6 +37,7 @@ async def make_request(method: str, endpoint: str, data: dict = None) -> dict:
 async def get_tasks() -> str:
     """Get all tasks from the TodoAppMCP application"""
     todos = await make_request("GET", "/tasks")
+    todos = todos['data']
     todos_text = "\n".join([
         f"ID: {todo['id']} | {todo['text']} | {'✅' if todo['completed'] else '⏳'} | {todo.get('notes', '')}"
         for todo in todos
@@ -55,29 +57,45 @@ async def add_task(
     # completed: bool = False
     ) -> str:
     """Add a new task to the list"""
+    now = datetime.now()
+    due_date = now + timedelta(days=7)
     todo_data = {
-        "text": text,
-        "notes": "",
-        "completed": False
+        "task": {
+            "text": text,
+            "priority": "medium",
+            "due_date": due_date.date().isoformat(),
+            "notes": "",
+            "completed": False
+        }
     }
     result = await make_request("POST", "/tasks", todo_data)
+    result = result['data']
     return f"Created todo: {result['text']} (ID: {result['id']})"
 
 @mcp.tool(title="update_task_<%= item_id %>")
 async def update_task(
     task_id: int, 
     text: str = None, 
+    priority: str = None,
+    due_date: date = None,
     notes: str = None, 
     completed: bool = None
     ) -> str:
     """Update an existing task"""
-    update_data = {}
+    update_data = {"task": {}}
     if text is not None:
-        update_data["text"] = text
+        update_data["task"]["text"] = text
+    if priority is not None:
+        update_data["task"]["priority"] = priority
+    if due_date is not None:
+        # if isinstance(due_date, (date)):
+        update_data["task"]["due_date"] = due_date.isoformat()
+        # else:
+        #     update_data["task"]["due_date"] = due_date
     if notes is not None:
-        update_data["notes"] = notes
+        update_data["task"]["notes"] = notes
     if completed is not None:
-        update_data["completed"] = completed
+        update_data["task"]["completed"] = completed
     
     result = await make_request("PUT", f"/tasks/{task_id}", update_data)
     return f"Updated todo: {result['text']} (ID: {result['id']})"
@@ -95,12 +113,12 @@ async def complete_task(
     #     update_data["notes"] = notes
     if completed is not None:
         update_data["completed"] = completed
-    
+
     result = await make_request("PUT", f"/tasks/{task_id}", update_data)
     return f"Updated todo: {result['text']} (ID: {result['id']})"
 
-@mcp.tool(title="delete_task_<%= item_id %>")
-async def delete_task(task_id: int) -> str:
+@mcp.tool(title="remove_task_<%= item_id %>")
+async def remove_task(task_id: int) -> str:
     """Remove task '<%= item_label %>' from the list"""
     result = await make_request("DELETE", f"/tasks/{task_id}")
     return result["message"]

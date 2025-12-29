@@ -4,7 +4,7 @@ defmodule TodoMcpUi.Todos.Task do
 
   schema "tasks" do
     field :text, :string
-    field :priority, Ecto.Enum, values: [:low, :medium, :high]
+    field :priority, Ecto.Enum, values: [:low, :medium, :high], default: :medium
     field :completed, :boolean
     field :due_date, :date
     field :notes, :string
