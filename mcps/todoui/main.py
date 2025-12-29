@@ -4,7 +4,7 @@ from pydantic import Field
 from datetime import date, datetime, timedelta
 
 # Initialize the FastMCP server
-mcp = FastMCP("TodoAppMCP", streamable_http_path='/mcp')
+mcp = FastMCP("TodoAppMCP")
 
 # FastAPI server URL
 FASTAPI_URL = "http://localhost:4000"
@@ -27,7 +27,9 @@ async def make_request(method: str, endpoint: str, data: dict = None) -> dict:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             
             response.raise_for_status()
-            return response.json()
+            if response.status_code != 204:
+                return response.json()
+            return None
     except httpx.ConnectError:
         raise Exception("Cannot connect to FastAPI server. Make sure it's running on http://localhost:4000")
     except httpx.HTTPStatusError as e:
@@ -74,7 +76,7 @@ async def add_task(
 
 @mcp.tool(title="update_task_<%= item_id %>")
 async def update_task(
-    task_id: int, 
+    id: int, 
     text: str = None, 
     priority: str = None,
     due_date: date = None,
@@ -97,40 +99,43 @@ async def update_task(
     if completed is not None:
         update_data["task"]["completed"] = completed
     
-    result = await make_request("PUT", f"/tasks/{task_id}", update_data)
+    result = await make_request("PUT", f"/tasks/{id}", update_data)
     return f"Updated todo: {result['text']} (ID: {result['id']})"
 
 @mcp.tool(title="complete_task_<%= item_id %>")
 async def complete_task(
-    task_id: int, 
+    id: int, 
     completed: bool = None
     ) -> str:
     """Mark task '<%= item_label %>' as complete"""
-    update_data = {}
+    update_data = {"task": {}}
     # if text is not None:
     #     update_data["text"] = text
     # if notes is not None:
     #     update_data["notes"] = notes
     if completed is not None:
-        update_data["completed"] = completed
+        update_data["task"]["completed"] = completed
 
-    result = await make_request("PUT", f"/tasks/{task_id}", update_data)
-    return f"Updated todo: {result['text']} (ID: {result['id']})"
+    result = await make_request("PUT", f"/tasks/{id}", update_data)
+    result = result['data']
+    return f"Updated task: {result['text']} (ID: {result['id']})"
 
 @mcp.tool(title="remove_task_<%= item_id %>")
-async def remove_task(task_id: int) -> str:
+async def remove_task(id: int) -> str:
     """Remove task '<%= item_label %>' from the list"""
-    result = await make_request("DELETE", f"/tasks/{task_id}")
-    return result["message"]
+    # result = await make_request("DELETE", f"/tasks/{id}")
+    await make_request("DELETE", f"/tasks/{id}")
+    return f"Deleted task with ID: {id}"
+    # return result["message"]
 
 @mcp.tool()
-async def get_task_by_id(task_id: int) -> str:
+async def get_task_by_id(id: int) -> str:
     """Get a specific task by ID"""
-    todo = await make_request("GET", f"/tasks/{task_id}")
+    todo = await make_request("GET", f"/tasks/{id}")
     return f"Todo Details:\nID: {todo['id']}\nTitle: {todo['text']}\nDescription: {todo.get('notes', '')}\nStatus: {'✅ Completed' if todo['completed'] else '⏳ Pending'}\nCreated: {todo['inserted_at']}\nUpdated: {todo['updated_at']}"
 
 if __name__ == "__main__":
     print("🔌 Starting TodoAppMCP Server with FastMCP...")
     
     # Run the MCP server
-    mcp.run(transport="http", host="127.0.0.1", port=4002)
+    mcp.run(transport="http", host="127.0.0.1", path='/mcp', port=4002)
