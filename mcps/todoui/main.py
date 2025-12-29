@@ -44,13 +44,13 @@ async def get_tasks() -> str:
         f"ID: {todo['id']} | {todo['text']} | {'✅' if todo['completed'] else '⏳'} | {todo.get('notes', '')}"
         for todo in todos
     ])
-    return f"All Todos:\n{todos_text}"
+    return f"All Tasks:\n{todos_text}"
 
 @mcp.tool()
 async def get_tasks_stats() -> str:
     """Get statistics about tasks (total, completed, pending)"""
     stats = await make_request("GET", "/tasks/stats")
-    return f"Todo Statistics:\nTotal Tasks: {stats['totalTasks']}\nCompleted: {stats['completedTasks']}\nPending: {stats['activeTasks']}\nLast Updated Task: {stats['lastUpdatedTask']}\nCompletion Rate: {stats['completionPercentage']}%"
+    return f"TodoApp Statistics:\nTotal Tasks: {stats['totalTasks']}\nCompleted: {stats['completedTasks']}\nPending: {stats['activeTasks']}\nLast Updated Task: {stats['lastUpdatedTask']}\nCompletion Rate: {stats['completionPercentage']}%"
 
 @mcp.tool(title="add_task")
 async def add_task(
@@ -72,7 +72,7 @@ async def add_task(
     }
     result = await make_request("POST", "/tasks", todo_data)
     result = result['data']
-    return f"Created todo: {result['text']} (ID: {result['id']})"
+    return f"Created task: {result['text']} (ID: {result['id']})"
 
 @mcp.tool(title="update_task_<%= item_id %>")
 async def update_task(
@@ -100,7 +100,7 @@ async def update_task(
         update_data["task"]["completed"] = completed
     
     result = await make_request("PUT", f"/tasks/{id}", update_data)
-    return f"Updated todo: {result['text']} (ID: {result['id']})"
+    return f"Updated task: {result['text']} (ID: {result['id']})"
 
 @mcp.tool(title="complete_task_<%= item_id %>")
 async def complete_task(
@@ -132,7 +132,7 @@ async def remove_task(id: int) -> str:
 async def get_task_by_id(id: int) -> str:
     """Get a specific task by ID"""
     todo = await make_request("GET", f"/tasks/{id}")
-    return f"Todo Details:\nID: {todo['id']}\nTitle: {todo['text']}\nDescription: {todo.get('notes', '')}\nStatus: {'✅ Completed' if todo['completed'] else '⏳ Pending'}\nCreated: {todo['inserted_at']}\nUpdated: {todo['updated_at']}"
+    return f"Task Details:\nID: {todo['id']}\nTitle: {todo['text']}\nDescription: {todo.get('notes', '')}\nStatus: {'✅ Completed' if todo['completed'] else '⏳ Pending'}\nCreated: {todo['inserted_at']}\nUpdated: {todo['updated_at']}"
 
 if __name__ == "__main__":
     print("🔌 Starting TodoAppMCP Server with FastMCP...")
