@@ -6,12 +6,12 @@ from datetime import date, datetime, timedelta
 # Initialize the FastMCP server
 mcp = FastMCP("TodoAppMCP")
 
-# FastAPI server URL
-FASTAPI_URL = "http://localhost:4000"
+# API server URL
+API_URL = "http://localhost:4000"
 
 async def make_request(method: str, endpoint: str, data: dict = None) -> dict:
-    """Make HTTP request to FastAPI server"""
-    url = f"{FASTAPI_URL}/api{endpoint}"
+    """Make HTTP request to API server"""
+    url = f"{API_URL}/api{endpoint}"
     
     try:
         async with httpx.AsyncClient() as client:
@@ -31,7 +31,7 @@ async def make_request(method: str, endpoint: str, data: dict = None) -> dict:
                 return response.json()
             return None
     except httpx.ConnectError:
-        raise Exception("Cannot connect to FastAPI server. Make sure it's running on http://localhost:4000")
+        raise Exception("Cannot connect to API server. Make sure it's running on http://localhost:4000")
     except httpx.HTTPStatusError as e:
         raise Exception(f"HTTP error: {e.response.status_code} - {e.response.text}")
 
