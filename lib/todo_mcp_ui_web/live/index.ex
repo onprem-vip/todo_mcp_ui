@@ -139,7 +139,7 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
         {:noreply, socket}
       {:ok, res} ->
         IO.inspect(res, label: "call result")
-        if not Map.get(res, "isError") do
+        if is_map(res) and not Map.get(res, "isError", true) do
           case Map.get(res, "tool") do
             "add_task" ->
               {:noreply,
@@ -185,10 +185,15 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
               }
           end
         else
+          tasks =
+            Todos.list_tasks()
+            |> Enum.map(fn t -> %{id: t.id, task: t} end)
+
           {:noreply,
             socket
               |> assign(:stats, stats())
               |> assign(:current_date, current_date())
+              |> stream(:tasks, tasks, reset: true)
           }
         end
 

@@ -110,7 +110,7 @@ async def complete_task(
     id: int, 
     completed: bool = None
     ) -> str:
-    """Mark task '<%= item_label %>' as complete"""
+    """Mark task '<%= item_label %>' as complete or incomplete"""
     update_data = {"task": {}}
     # if text is not None:
     #     update_data["text"] = text
