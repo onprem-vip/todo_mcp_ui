@@ -223,26 +223,6 @@ defmodule TodoMcpUiWeb.CoreComponents do
   end
 
   @doc """
-  Renders a jsexec.
-
-  ## Examples
-
-      <.jsexec id="my_script" js_code={@code} />
-  """
-  attr :id, :string, required: true,
-    doc: "the id of the element"
-
-  attr :js_code, :string, required: true,
-    doc: "javascript code to be executed"
-
-  def jsexec(assigns) do
-    ~H"""
-    <div id={@id} class="mt-4 space-y-5 bg-white hidden" data-js-command={@js_code} phx-hook="JsExecHandler">
-    </div>
-    """
-  end
-
-  @doc """
   Renders an input with label and error messages.
 
   A `Phoenix.HTML.FormField` may be passed as argument,

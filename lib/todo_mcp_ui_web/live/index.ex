@@ -3,8 +3,8 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
 
   alias TodoMcpUi.Todos
   alias TodoMcpUi.Todos.Task
-  alias TodoMcpUiWeb.Utils.LvJs
   alias ExVoix.ModelContext.Tool
+  alias ExVoix.Utils.LvJs
 
   @impl true
   def mount(params, session, socket) do

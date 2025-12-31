@@ -25,7 +25,7 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/todo_mcp_ui"
 import topbar from "../vendor/topbar"
 import VoixEventHandler from '../../deps/ex_voix/lib/ex_voix/js/voix_event_handler';
-import JsExecHandler from "./hooks/js_exec_handler"
+import JsExecHandler from '../../deps/ex_voix/lib/ex_voix/js/js_exec_handler'
 
 let Hooks = {};
 Hooks.VoixEventHandler = VoixEventHandler;
