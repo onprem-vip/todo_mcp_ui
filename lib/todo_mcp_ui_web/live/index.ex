@@ -170,7 +170,7 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
               payload = %{to: "#task_script", attr: "data-js-command"}
               {:noreply,
                 socket
-                |> push_event("js-exec", payload)
+                |> push_event("lvjs-exec", payload)
               }
 
             "close_update_task_form" ->
@@ -181,7 +181,7 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
               payload = %{to: "#update_task_script", attr: "data-js-command"}
               {:noreply,
                 socket
-                |> push_event("js-exec", payload)
+                |> push_event("lvjs-exec", payload)
               }
           end
         else
