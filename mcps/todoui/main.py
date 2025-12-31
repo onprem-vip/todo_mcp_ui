@@ -3,6 +3,9 @@ from fastmcp import FastMCP
 from pydantic import Field
 from datetime import date, datetime, timedelta
 
+from mcp_ui_server import create_ui_resource, UIMetadataKey
+from mcp_ui_server.core import UIResource
+
 # Initialize the FastMCP server
 mcp = FastMCP("TodoAppMCP")
 
@@ -133,6 +136,42 @@ async def get_task_by_id(id: int) -> str:
     """Get a specific task by ID"""
     todo = await make_request("GET", f"/tasks/{id}")
     return f"Task Details:\nID: {todo['id']}\nTitle: {todo['text']}\nDescription: {todo.get('notes', '')}\nStatus: {'✅ Completed' if todo['completed'] else '⏳ Pending'}\nCreated: {todo['inserted_at']}\nUpdated: {todo['updated_at']}"
+
+@mcp.tool(title="show_update_task_form_<%= item_id %>")
+def show_update_task_form(id: int) -> list[UIResource]:
+    """Show update task '<%= item_label %>' form"""
+    interactive_js = """
+    Phoenix.LiveView.JS.patch("/tasks/%d/edit")
+    """ % (id,)
+
+    ui_resource = create_ui_resource({
+        "uri": "ui://todo-app-demo",
+        "content": {
+            "type": "rawHtml",
+            "htmlString": interactive_js.strip(),
+        },
+        "encoding": "text"
+    })
+
+    return [ui_resource]
+
+@mcp.tool(title="close_update_task_form")
+def close_update_task_form() -> list[UIResource]:
+    """Close any update task form"""
+    interactive_js = """
+    Phoenix.LiveView.JS.patch("/tasks")
+    """
+
+    ui_resource = create_ui_resource({
+        "uri": "ui://todo-app-demo",
+        "content": {
+            "type": "rawHtml",
+            "htmlString": interactive_js.strip(),
+        },
+        "encoding": "text"
+    })
+
+    return [ui_resource]
 
 if __name__ == "__main__":
     print("🔌 Starting TodoAppMCP Server with FastMCP...")

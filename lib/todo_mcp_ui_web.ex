@@ -60,6 +60,7 @@ defmodule TodoMcpUiWeb do
   def live_component do
     quote do
       use Phoenix.LiveComponent
+      import ExVoix.Html.Components
 
       unquote(html_helpers())
     end

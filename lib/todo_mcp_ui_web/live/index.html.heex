@@ -4,11 +4,11 @@
         Task Manager
     </h1>
     <h5 class="">Organize your day with AI assistance</h5>
-    <!--:actions>
+    <:actions>
         <.link patch={~p"/tasks/new"} class="">
         <.button class="btn btn-soft">New Task</.button>
         </.link>
-    </:actions-->
+    </:actions>
     </.header>
 
     <form
@@ -85,6 +85,7 @@
                 </div>
                 <.tool mcp={@todo_mcp} name="complete_task" item_id={id} item_label={task.text} />
                 <.tool mcp={@todo_mcp} name="remove_task" item_id={id} item_label={task.text} />
+                <.tool mcp={@todo_mcp} name="show_update_task_form" item_id={id} item_label={task.text} />
 
             </li>
         <% end %>
@@ -95,6 +96,8 @@
     </form>
 </div>
 
+<.jsexec id="task_script" js_code={@code} />
+
 <.modal
   :if={@live_action in [:new, :edit]}
   id="task-modal"
@@ -103,12 +106,14 @@
 >
   <.live_component
     :if={@live_action in [:new, :edit]}
-    module={TodoAppWeb.TaskLive.FormComponent}
+    module={TodoMcpUiWeb.TaskLive.FormComponent}
     id={@task.id || :new}
     title={@page_title}
     action={@live_action}
     task={@task}
     uri={@uri}
     patch={~p"/tasks"}
+    todo_mcp={@todo_mcp}
+    code={@code}
   />
 </.modal>
