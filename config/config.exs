@@ -52,6 +52,19 @@ config :tailwind,
     cd: Path.expand("..", __DIR__)
   ]
 
+config :mix_systemd,
+  app_user: System.get_env("SYSTEM_USER", "user1"),
+  app_group: System.get_env("SYSTEM_GROUP", "user1"),
+  base_dir: Path.expand("../_build/prod/rel/todo_mcp_ui", __DIR__),
+  current_dir: Path.expand("../_build/prod/rel/todo_mcp_ui", __DIR__),
+  working_dir: Path.expand("..", __DIR__),
+  env_files: [
+    ["-", Path.expand("..", __DIR__), "/.env"],
+  ],
+  env_vars: [
+    "PHX_SERVER=true",
+  ]
+
 # Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",

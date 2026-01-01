@@ -66,6 +66,8 @@ defmodule TodoMcpUi.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
+      {:dotenvy, "~> 1.1"},
+      {:mix_systemd, "~> 0.8"},
       {:ex_voix, "~> 0.2.0"},
     ]
   end
