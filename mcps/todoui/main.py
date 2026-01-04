@@ -141,7 +141,7 @@ async def get_task_by_id(id: int) -> str:
 def show_update_task_form(id: int) -> list[UIResource]:
     """Show update task '<%= item_label %>' form"""
     interactive_js = """
-    Phoenix.LiveView.JS.patch("/tasks/%d/edit")
+    JS.patch("/tasks/%d/edit")
     """ % (id,)
 
     ui_resource = create_ui_resource({
@@ -160,7 +160,7 @@ def show_update_task_form(id: int) -> list[UIResource]:
 def close_update_task_form() -> list[UIResource]:
     """Close any update task form"""
     interactive_js = """
-    Phoenix.LiveView.JS.patch("/tasks")
+    JS.patch("/tasks")
     """
 
     ui_resource = create_ui_resource({
