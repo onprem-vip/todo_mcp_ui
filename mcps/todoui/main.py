@@ -145,10 +145,11 @@ def show_update_task_form(id: int) -> list[UIResource]:
     """ % (id,)
 
     ui_resource = create_ui_resource({
-        "uri": "ui://todo-app-demo",
+        "uri": "ui://todo-app-demo/update-task-form",
         "content": {
-            "type": "rawHtml",
-            "htmlString": interactive_js.strip(),
+            "type": "remoteDom",
+            "script": interactive_js.strip(),
+            "framework": "webcomponents" # workaround, later we will use "liveviewjs"
         },
         "encoding": "text"
     })
@@ -163,10 +164,11 @@ def close_update_task_form() -> list[UIResource]:
     """
 
     ui_resource = create_ui_resource({
-        "uri": "ui://todo-app-demo",
+        "uri": "ui://todo-app-demo/update-task-form",
         "content": {
-            "type": "rawHtml",
-            "htmlString": interactive_js.strip(),
+            "type": "remoteDom",
+            "script": interactive_js.strip(),
+            "framework": "webcomponents" # workaround, later we will use "liveviewjs"
         },
         "encoding": "text"
     })

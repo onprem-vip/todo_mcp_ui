@@ -68,7 +68,7 @@ defmodule TodoMcpUi.MixProject do
       {:bandit, "~> 1.5"},
       {:dotenvy, "~> 1.1"},
       {:mix_systemd, "~> 0.8"},
-      {:ex_voix, "~> 0.2.0"},
+      {:ex_voix, "~> 0.3"},
     ]
   end
 
