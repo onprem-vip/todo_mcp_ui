@@ -44,15 +44,21 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     task = Todos.get_task!(id)
+    task_changeset = task_changeset_from(task, %{})
+
     socket
     |> assign(:page_title, "Todo App · Edit Task")
     |> assign(:task, task)
+    |> assign(:form, to_form(task_changeset))
   end
 
   defp apply_action(socket, :new, _params) do
+    task_changeset = task_changeset_from(%{})
+
     socket
     |> assign(:page_title, "Todo App · New Task")
     |> assign(:task, %Task{})
+    |> assign(:form, to_form(task_changeset))
   end
 
   defp apply_action(socket, :index, params) do
@@ -211,6 +217,9 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
     %{id: (if is_nil(Map.get(task, "id")), do: task.id, else: Map.get(task, "id")), task: task}
   end
 
+  defp task_changeset_from(task = %Task{}, params) do
+    Todos.change_task(task, params)
+  end
   defp task_changeset_from(params = %{}) do
     Todos.change_task(%Task{}, params)
   end
