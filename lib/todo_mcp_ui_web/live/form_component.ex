@@ -30,9 +30,8 @@ defmodule TodoMcpUiWeb.TaskLive.FormComponent do
         </actions>
 
       </.simple_form>
-      <.tool mcp={@todo_mcp} name="close_update_task_form" />
+      <.tool mcp={@todo_mcp} name="close_any_forms" />
 
-      <.lvjsexec id="update_task_script" js_code={@code} />
     </div>
     """
   end

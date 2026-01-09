@@ -40,4 +40,9 @@ defmodule TodoMcpUiWeb.TaskController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def show_stats(conn, _params) do
+    stats = Todos.get_stats()
+    json(conn, stats)
+  end
 end

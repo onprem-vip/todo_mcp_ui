@@ -29,6 +29,7 @@ defmodule TodoMcpUiWeb.Router do
     pipe_through :api
 
     resources "/tasks", TaskController, except: [:new, :edit]
+    get "/tasks-stats", TaskController, :show_stats
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

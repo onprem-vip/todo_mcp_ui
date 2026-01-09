@@ -154,9 +154,9 @@ def show_update_task_form(id: int) -> list[UIResource]:
 
     return [ui_resource]
 
-@mcp.tool(title="close_update_task_form")
-def close_update_task_form() -> list[UIResource]:
-    """Close any update task form"""
+@mcp.tool(title="close_any_forms")
+def close_any_forms() -> list[UIResource]:
+    """Close any opened forms"""
     interactive_js = """
     JS.patch("/tasks")
     """
@@ -167,6 +167,24 @@ def close_update_task_form() -> list[UIResource]:
         uri="ui://todo-app-demo/close-update-task-form"
     )
     ui_resource = UIResource(resource=text_resource)
+
+    return [ui_resource]
+
+# TODO: create example using webcomponents ?
+@mcp.tool(title="show_stats_window")
+async def show_stats_window() -> list[UIResource]:
+    """Show TodoApp stats window"""
+    # get stats from API
+    todo_stats = await make_request("GET", f"/tasks-stats")
+
+    wc_script = """
+
+    """
+    ui_resource = create_ui_resource({
+        "uri": "ui://todo-app-demo/show-stats-window",
+        "content": {"type": "remoteDom", "script": wc_script.strip(), "framework": "webcomponents"},
+        "encoding": "text",
+    })
 
     return [ui_resource]
 

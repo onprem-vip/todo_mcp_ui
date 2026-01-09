@@ -169,25 +169,15 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
                   |> stream_delete(:tasks, maybe_extract_item(res))}
 
             "show_update_task_form" ->
-              IO.inspect(Map.get(res, "text"))
-              socket =
-                socket |> assign(:code, LvJs.eval(Map.get(res, "text")))
-
-              payload = %{to: "#task_script", attr: "data-js-command"}
+              # IO.inspect(Map.get(res, "text"))
               {:noreply,
-                socket
-                |> push_event("lvjs-exec", payload)
+                socket |> executeRemoteCode(res)
               }
 
-            "close_update_task_form" ->
-              IO.inspect(Map.get(res, "text"))
-              socket =
-                socket |> assign(:code, LvJs.eval(Map.get(res, "text")))
-
-              payload = %{to: "#update_task_script", attr: "data-js-command"}
+            "close_any_forms" ->
+              # IO.inspect(Map.get(res, "text"))
               {:noreply,
-                socket
-                |> push_event("lvjs-exec", payload)
+                socket |> executeRemoteCode(res)
               }
           end
         else
@@ -215,6 +205,24 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
         _ -> item
       end
     %{id: (if is_nil(Map.get(task, "id")), do: task.id, else: Map.get(task, "id")), task: task}
+  end
+
+  defp executeRemoteCode(socket, res) do
+    case Map.get(res, "mimeType") do
+      "application/vnd.mcp-ui.remote-dom+javascript; framework=liveviewjs" ->
+        socket =
+          socket |> assign(:code, LvJs.eval(Map.get(res, "text")))
+
+        payload = %{to: "#executable_script", attr: "data-js-command"}
+        socket |> push_event("lvjs-exec", payload)
+
+      "application/vnd.mcp-ui.remote-dom+javascript; framework=webcomponents" ->
+        # TODO:
+        socket
+
+      _ ->
+        socket
+    end
   end
 
   defp task_changeset_from(task = %Task{}, params) do
