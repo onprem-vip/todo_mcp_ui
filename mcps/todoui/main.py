@@ -4,6 +4,7 @@ from pydantic import Field
 from datetime import date, datetime, timedelta
 
 from mcp_ui_server import create_ui_resource, UIMetadataKey
+from mcp.types import TextResourceContents 
 from mcp_ui_server.core import UIResource
 
 # Initialize the FastMCP server
@@ -144,15 +145,12 @@ def show_update_task_form(id: int) -> list[UIResource]:
     JS.patch("/tasks/%d/edit")
     """ % (id,)
 
-    ui_resource = create_ui_resource({
-        "uri": "ui://todo-app-demo/update-task-form",
-        "content": {
-            "type": "remoteDom",
-            "script": interactive_js.strip(),
-            "framework": "webcomponents" # workaround, later we will use "liveviewjs"
-        },
-        "encoding": "text"
-    })
+    text_resource = TextResourceContents(
+        text=interactive_js.strip(),
+        mimeType="application/vnd.mcp-ui.remote-dom+javascript; framework=liveviewjs",
+        uri="ui://todo-app-demo/show-update-task-form"
+    )
+    ui_resource = UIResource(resource=text_resource)
 
     return [ui_resource]
 
@@ -163,15 +161,12 @@ def close_update_task_form() -> list[UIResource]:
     JS.patch("/tasks")
     """
 
-    ui_resource = create_ui_resource({
-        "uri": "ui://todo-app-demo/update-task-form",
-        "content": {
-            "type": "remoteDom",
-            "script": interactive_js.strip(),
-            "framework": "webcomponents" # workaround, later we will use "liveviewjs"
-        },
-        "encoding": "text"
-    })
+    text_resource = TextResourceContents(
+        text=interactive_js.strip(),
+        mimeType="application/vnd.mcp-ui.remote-dom+javascript; framework=liveviewjs",
+        uri="ui://todo-app-demo/close-update-task-form"
+    )
+    ui_resource = UIResource(resource=text_resource)
 
     return [ui_resource]
 
