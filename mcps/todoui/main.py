@@ -176,7 +176,7 @@ async def show_stats_window() -> list[UIResource]:
     """Show Todo MCP-UI stats window"""
     # get stats from API
     todo_stats = await make_request("GET", f"/tasks-stats")
-    stats_text = "</tr>".join([f"<tr><td>{k}</td><td>{todo_stats[k]}</td>" for k in todo_stats])
+    stats_text = "</tr>".join([f"<tr><td align='left'>{k}</td><td>{todo_stats[k]}</td>" for k in todo_stats])
     stats_text = html.escape(f"<table>{stats_text}</table>")
 
     wc_script = """
