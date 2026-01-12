@@ -24,6 +24,7 @@
         <.input id="text_id" field={@form[:text]} type="text" value={@add_task_text} label="" placeholder="What need to be done?" class="input input-bordered h-10 mt-2 min-w-[50vh]"/>
         <.button class="btn btn-soft h-10" type="submit">Add Task</.button>
         <.tool mcp={@todo_mcp} name="add_task" />
+        <.tool mcp={@todo_mcp} name="show_stats_window" />
     </div>
     <ul id="tasks" phx-update="stream" class="list bg-base-100 rounded-box shadow-md">
         <%= for {dom_id, %{id: id, task: task}} <- @streams.tasks do %>
@@ -99,7 +100,17 @@
     </form>
 </div>
 
-<.lvjsexec id="executable_script" js_code={@code} />
+<.ui_resource_renderer id="executable-script" resource={@resource} />
+
+<.modal
+    :if={@live_action in [:stats]}
+    id="popup-window"
+    show
+    on_cancel={JS.patch(~p"/tasks")}
+>
+<ui-resource-renderer id="remote-code-renderer" phx-hook='VoixEventHandler'></ui-resource-renderer>
+<.tool mcp={@todo_mcp} name="close_any_forms" />
+</.modal>
 
 <.modal
   :if={@live_action in [:new, :edit]}
@@ -117,6 +128,5 @@
     uri={@uri}
     patch={~p"/tasks"}
     todo_mcp={@todo_mcp}
-    code={@code}
   />
 </.modal>

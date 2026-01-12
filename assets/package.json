@@ -1,0 +1,13 @@
+{
+  "name": "assets",
+  "module": "index.ts",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@mcp-ui/client": "^5.17.3"
+  }
+}

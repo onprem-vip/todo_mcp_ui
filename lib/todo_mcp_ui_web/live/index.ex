@@ -4,7 +4,6 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
   alias TodoMcpUi.Todos
   alias TodoMcpUi.Todos.Task
   alias ExVoix.ModelContext.Tool
-  alias ExVoix.Utils.LvJs
 
   @impl true
   def mount(params, session, socket) do
@@ -25,7 +24,7 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
       |> assign(:add_task_text, nil)
       |> assign(:stats, stats())
       |> assign(:current_date, current_date())
-      |> assign(:code, "")
+      |> assign(:resource, nil)
       |> assign(:todo_mcp, TodoMcpUiMCP.Clients.TodoAppMCP)
       |> stream(:tasks, tasks)
     }
@@ -40,6 +39,16 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
       |> assign(uri: URI.parse(url))
 
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  defp apply_action(socket, :stats, _params) do
+    task_changeset = task_changeset_from(%{})
+
+    socket
+    |> assign(:page_title, "Todo App · Stats")
+    |> assign(:task, %Task{})
+    |> assign(:form, to_form(task_changeset))
+    |> execute_remote_code("#remote-code-renderer", socket.assigns.resource)
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -138,61 +147,58 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
 
   @impl true
   def handle_event("call", params, socket) do
-    IO.inspect(params, label: "params in call event")
+    # IO.inspect(params, label: "params in call event")
 
     case Tool.call(params) do
       nil ->
         {:noreply, socket}
+
       {:ok, res} ->
         IO.inspect(res, label: "call result")
-        if is_map(res) and not Map.get(res, "isError", true) do
-          case Map.get(res, "tool") do
-            "add_task" ->
-              {:noreply,
-                socket
-                  |> assign(:stats, stats())
-                  |> assign(:current_date, current_date())
-                  |> stream_insert(:tasks, maybe_extract_item(res))}
+        {:noreply, tool_call_action(socket, res)}
 
-            "complete_task" ->
-              {:noreply,
-                socket
-                  |> assign(:stats, stats())
-                  |> assign(:current_date, current_date())
-                  |> stream_insert(:tasks, maybe_extract_item(res))}
+    end
+  end
 
-            "remove_task" ->
-              {:noreply,
-                socket
-                  |> assign(:stats, stats())
-                  |> assign(:current_date, current_date())
-                  |> stream_delete(:tasks, maybe_extract_item(res))}
+  defp tool_call_action(socket, res) do
+    if is_map(res) and not Map.get(res, "isError", true) do
+      case Map.get(res, "tool") do
+        "add_task" ->
+          socket
+            |> assign(:stats, stats())
+            |> assign(:current_date, current_date())
+            |> stream_insert(:tasks, maybe_extract_item(res))
 
-            "show_update_task_form" ->
-              # IO.inspect(Map.get(res, "text"))
-              {:noreply,
-                socket |> executeRemoteCode(res)
-              }
+        "complete_task" ->
+          socket
+            |> assign(:stats, stats())
+            |> assign(:current_date, current_date())
+            |> stream_insert(:tasks, maybe_extract_item(res))
 
-            "close_any_forms" ->
-              # IO.inspect(Map.get(res, "text"))
-              {:noreply,
-                socket |> executeRemoteCode(res)
-              }
-          end
-        else
-          tasks =
-            Todos.list_tasks()
-            |> Enum.map(fn t -> %{id: t.id, task: t} end)
+        "remove_task" ->
+          socket
+            |> assign(:stats, stats())
+            |> assign(:current_date, current_date())
+            |> stream_delete(:tasks, maybe_extract_item(res))
 
-          {:noreply,
-            socket
-              |> assign(:stats, stats())
-              |> assign(:current_date, current_date())
-              |> stream(:tasks, tasks, reset: true)
-          }
-        end
+        "show_stats_window" ->
+          socket
+            |> assign(:resource, res)
+            |> push_patch(to: "/tasks/stats")
 
+        _ ->
+          socket |> execute_remote_code("#executable-script", res)
+
+      end
+    else
+      tasks =
+        Todos.list_tasks()
+        |> Enum.map(fn t -> %{id: t.id, task: t} end)
+
+      socket
+        |> assign(:stats, stats())
+        |> assign(:current_date, current_date())
+        |> stream(:tasks, tasks, reset: true)
     end
   end
 
@@ -207,22 +213,11 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
     %{id: (if is_nil(Map.get(task, "id")), do: task.id, else: Map.get(task, "id")), task: task}
   end
 
-  defp executeRemoteCode(socket, res) do
-    case Map.get(res, "mimeType") do
-      "application/vnd.mcp-ui.remote-dom+javascript; framework=liveviewjs" ->
-        socket =
-          socket |> assign(:code, LvJs.eval(Map.get(res, "text")))
-
-        payload = %{to: "#executable_script", attr: "data-js-command"}
-        socket |> push_event("lvjs-exec", payload)
-
-      "application/vnd.mcp-ui.remote-dom+javascript; framework=webcomponents" ->
-        # TODO:
-        socket
-
-      _ ->
-        socket
-    end
+  defp execute_remote_code(socket, dom_id, res) do
+    payload = %{to: dom_id, resource: res}
+    socket
+      |> assign(:resource, res)
+      |> push_event("ui-resource-render", payload)
   end
 
   defp task_changeset_from(task = %Task{}, params) do

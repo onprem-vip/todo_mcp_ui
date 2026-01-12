@@ -1,4 +1,5 @@
 import httpx
+import html
 from fastmcp import FastMCP
 from pydantic import Field
 from datetime import date, datetime, timedelta
@@ -147,7 +148,7 @@ def show_update_task_form(id: int) -> list[UIResource]:
 
     text_resource = TextResourceContents(
         text=interactive_js.strip(),
-        mimeType="application/vnd.mcp-ui.remote-dom+javascript; framework=liveviewjs",
+        mimeType="application/vnd.ex-voix.command+javascript; framework=liveviewjs",
         uri="ui://todo-app-demo/show-update-task-form"
     )
     ui_resource = UIResource(resource=text_resource)
@@ -163,7 +164,7 @@ def close_any_forms() -> list[UIResource]:
 
     text_resource = TextResourceContents(
         text=interactive_js.strip(),
-        mimeType="application/vnd.mcp-ui.remote-dom+javascript; framework=liveviewjs",
+        mimeType="application/vnd.ex-voix.command+javascript; framework=liveviewjs",
         uri="ui://todo-app-demo/close-update-task-form"
     )
     ui_resource = UIResource(resource=text_resource)
@@ -173,13 +174,74 @@ def close_any_forms() -> list[UIResource]:
 # TODO: create example using webcomponents ?
 @mcp.tool(title="show_stats_window")
 async def show_stats_window() -> list[UIResource]:
-    """Show TodoApp stats window"""
+    """Show Todo MCP-UI stats window"""
     # get stats from API
     todo_stats = await make_request("GET", f"/tasks-stats")
+    stats_text = "</tr>".join([f"<tr><td>{k}</td><td>{todo_stats[k]}</td>" for k in todo_stats])
+    stats_text = html.escape(f"<table>{stats_text}</table>")
 
     wc_script = """
+        // Create a state variable to track the current logo
+        let isDarkMode = false;
 
-    """
+        // Create the main container stack with centered alignment
+        const stack = document.createElement('ui-stack');
+        stack.setAttribute('direction', 'vertical');
+        stack.setAttribute('spacing', '20');
+        stack.setAttribute('align', 'center');
+
+        // Create the title text
+        const title = document.createElement('ui-text');
+        title.setAttribute('content', 'Todo MCP-UI Statistics');
+
+        // Create a centered container for the logo
+        const logoContainer = document.createElement('ui-stack');
+        logoContainer.setAttribute('direction', 'vertical');
+        logoContainer.setAttribute('spacing', '0');
+        logoContainer.setAttribute('align', 'center');
+
+        // Create the logo image (starts with light theme)
+        const logo = document.createElement('ui-image');
+        logo.setAttribute('src', 'https://block.github.io/goose/img/logo_light.png');
+        logo.setAttribute('alt', 'Goose Logo');
+        logo.setAttribute('width', '200');
+
+        // Create the stats text
+        const stats = document.createElement('ui-text');
+        stats.setAttribute('content', '%s');
+
+        // Create the toggle button
+        const toggleButton = document.createElement('ui-button');
+        toggleButton.setAttribute('label', '🌙 Switch to Dark Mode');
+
+        // Add the toggle functionality
+        toggleButton.addEventListener('press', () => {
+            isDarkMode = !isDarkMode;
+            
+            if (isDarkMode) {
+                // Switch to dark mode
+                logo.setAttribute('src', 'https://block.github.io/goose/img/logo_dark.png');
+                logo.setAttribute('alt', 'Goose Logo (Dark Mode)');
+                toggleButton.setAttribute('label', '☀️ Switch to Light Mode');
+            } else {
+                // Switch to light mode
+                logo.setAttribute('src', 'https://block.github.io/goose/img/logo_light.png');
+                logo.setAttribute('alt', 'Goose Logo (Light Mode)');
+                toggleButton.setAttribute('label', '🌙 Switch to Dark Mode');
+            }
+            
+            console.log('Logo toggled to:', isDarkMode ? 'dark' : 'light', 'mode');
+        });
+
+        // Assemble the UI
+        logoContainer.appendChild(logo);
+        stack.appendChild(title);
+        stack.appendChild(stats);
+        stack.appendChild(logoContainer);
+        stack.appendChild(toggleButton);
+        root.appendChild(stack);
+    """ % (stats_text,)
+
     ui_resource = create_ui_resource({
         "uri": "ui://todo-app-demo/show-stats-window",
         "content": {"type": "remoteDom", "script": wc_script.strip(), "framework": "webcomponents"},
