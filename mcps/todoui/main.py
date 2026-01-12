@@ -171,7 +171,6 @@ def close_any_forms() -> list[UIResource]:
 
     return [ui_resource]
 
-# TODO: create example using webcomponents ?
 @mcp.tool(title="show_stats_window")
 async def show_stats_window() -> list[UIResource]:
     """Show Todo MCP-UI stats window"""
