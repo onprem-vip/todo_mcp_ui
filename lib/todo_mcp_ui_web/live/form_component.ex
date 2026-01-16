@@ -21,16 +21,46 @@ defmodule TodoMcpUiWeb.TaskLive.FormComponent do
       >
 
         <.input field={@form[:text]} type="text" label="Task" />
+        <.tool mcp={@todo_mcp} name="update_field_value" item_id="task_text" item_label="Task text" />
         <.input field={@form[:due_date]} type="date" label="Due Date" />
-        <.input field={@form[:priority]} type="select" label="Priority" options={["Low": "low", "Medium": "medium", "High": "high"]} />
-        <.input field={@form[:notes]} type="textarea" label="Notes" />
+        <.tool mcp={@todo_mcp} name="update_field_value" item_id="task_due_date" item_label="Task due date" />
+        <.input field={@form[:priority]} type="select" label="Priority" options={["Low": "low", "Medium": "medium", "High": "high"]} phx-hook=".SelectValue" />
+        <script :type={Phoenix.LiveView.ColocatedHook} name=".SelectValue">
+          export default {
+            mounted() {
+              this.el.addEventListener("set_value", e => {
+                console.log('task_priority', e.detail.value);
+                this.el.value = e.detail.value;
+                this.el.dispatchEvent(new Event("change", {bubbles: true}));
+              });
+            }
+          }
+        </script>
+        <.tool mcp={@todo_mcp} name="update_field_value" item_id="task_priority" item_label="Task priority" />
+        <.input field={@form[:notes]} type="textarea" label="Notes" phx-hook=".TextareaValue" />
+        <script :type={Phoenix.LiveView.ColocatedHook} name=".TextareaValue">
+          export default {
+            mounted() {
+              this.el.addEventListener("input", (event) => {
+                this.updateTextarea(this.el.id, this.el.getAttribute('value'));
+              });
+            },
+            updateTextarea(element, newValue) {
+              let textarea = document.querySelector("#" + element)
+              textarea.innerText = newValue;
+              textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
+        </script>
+        <.tool mcp={@todo_mcp} name="update_field_value" item_id="task_notes" item_label="Task notes" />
 
         <actions>
-        <.button phx-disable-with="Saving...">Save</.button>
+        <.button id="save-task" phx-disable-with="Saving...">Save</.button>
         </actions>
 
       </.simple_form>
       <.tool mcp={@todo_mcp} name="close_any_forms" />
+      <.tool mcp={@todo_mcp} name="save_task_form" />
 
     </div>
     """

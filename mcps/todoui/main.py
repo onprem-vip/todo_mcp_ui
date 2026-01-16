@@ -1,5 +1,6 @@
 import httpx
 import html
+from typing import Any
 from fastmcp import FastMCP
 from pydantic import Field
 from datetime import date, datetime, timedelta
@@ -81,7 +82,7 @@ async def add_task(
 
 @mcp.tool(title="update_task_<%= item_id %>")
 async def update_task(
-    id: int, 
+    id: Any, 
     text: str = None, 
     priority: str = None,
     due_date: date = None,
@@ -109,7 +110,7 @@ async def update_task(
 
 @mcp.tool(title="complete_task_<%= item_id %>")
 async def complete_task(
-    id: int, 
+    id: Any,
     completed: bool = None
     ) -> str:
     """Mark task '<%= item_label %>' as complete or incomplete"""
@@ -126,7 +127,7 @@ async def complete_task(
     return f"Updated task: {result['text']} (ID: {result['id']})"
 
 @mcp.tool(title="remove_task_<%= item_id %>")
-async def remove_task(id: int) -> str:
+async def remove_task(id: Any) -> str:
     """Remove task '<%= item_label %>' from the list"""
     # result = await make_request("DELETE", f"/tasks/{id}")
     await make_request("DELETE", f"/tasks/{id}")
@@ -134,22 +135,66 @@ async def remove_task(id: int) -> str:
     # return result["message"]
 
 @mcp.tool()
-async def get_task_by_id(id: int) -> str:
+async def get_task_by_id(id: Any) -> str:
     """Get a specific task by ID"""
     todo = await make_request("GET", f"/tasks/{id}")
     return f"Task Details:\nID: {todo['id']}\nTitle: {todo['text']}\nDescription: {todo.get('notes', '')}\nStatus: {'✅ Completed' if todo['completed'] else '⏳ Pending'}\nCreated: {todo['inserted_at']}\nUpdated: {todo['updated_at']}"
 
 @mcp.tool(title="show_update_task_form_<%= item_id %>")
-def show_update_task_form(id: int) -> list[UIResource]:
+def show_update_task_form(id: Any) -> list[UIResource]:
     """Show update task '<%= item_label %>' form"""
     interactive_js = """
-    JS.patch("/tasks/%d/edit")
+    JS.patch("/tasks/%s/edit")
     """ % (id,)
 
     text_resource = TextResourceContents(
         text=interactive_js.strip(),
         mimeType="application/vnd.ex-voix.command+javascript; framework=liveviewjs",
         uri="ui://todo-app-demo/show-update-task-form"
+    )
+    ui_resource = UIResource(resource=text_resource)
+
+    return [ui_resource]
+
+@mcp.tool(title="save_task_form")
+def save_task_form() -> list[UIResource]:
+    """Save task form"""
+    interactive_js = """
+    JS.dispatch("click", to: "#save-task")
+    """
+
+    text_resource = TextResourceContents(
+        text=interactive_js.strip(),
+        mimeType="application/vnd.ex-voix.command+javascript; framework=liveviewjs",
+        uri="ui://todo-app-demo/save-task-form"
+    )
+    ui_resource = UIResource(resource=text_resource)
+
+    return [ui_resource]
+
+@mcp.tool(title="update_field_<%= item_id %>_value")
+def update_field_value(id: Any, new_value: str) -> list[UIResource]:
+    """Update field <%= item_label %> value"""
+
+    if id == "task_notes":
+        interactive_js = """
+          JS.set_attribute({"value", "%s"}, to: "#%s") |> JS.dispatch("input", to: "#%s")
+        """ % (new_value, id, id)
+
+    elif id == "task_priority":
+        interactive_js = """
+          JS.dispatch("set_value", detail: %%{value: "%s"}, to: "#%s")
+        """ % (new_value, id)
+
+    else:
+        interactive_js =  """
+          JS.set_attribute({"value", "%s"}, to: "#%s") |> JS.dispatch("input", to: "#%s") |> JS.show(transition: {"ease-out duration-300", "opacity-0", "opacity-100"}, time: 300, to: "#%s")
+        """ % (new_value, id, id, id)
+
+    text_resource = TextResourceContents(
+        text=interactive_js.strip(),
+        mimeType="application/vnd.ex-voix.command+javascript; framework=liveviewjs",
+        uri="ui://todo-app-demo/update-field-value"
     )
     ui_resource = UIResource(resource=text_resource)
 
