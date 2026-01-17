@@ -176,15 +176,10 @@ def save_task_form() -> list[UIResource]:
 def update_field_value(id: Any, new_value: str) -> list[UIResource]:
     """Update field <%= item_label %> value"""
 
-    if id == "task_notes":
-        interactive_js = """
-          JS.set_attribute({"value", "%s"}, to: "#%s") |> JS.dispatch("input", to: "#%s")
-        """ % (new_value, id, id)
-
-    elif id == "task_priority":
+    if id == "task_priority":
         interactive_js = """
           JS.dispatch("set_value", detail: %%{value: "%s"}, to: "#%s")
-        """ % (new_value, id)
+        """ % (new_value.lower(), id)
 
     else:
         interactive_js =  """
