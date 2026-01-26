@@ -58,8 +58,9 @@ async def get_tasks_stats() -> str:
     stats = await make_request("GET", "/tasks/stats")
     return f"TodoApp Statistics:\nTotal Tasks: {stats['totalTasks']}\nCompleted: {stats['completedTasks']}\nPending: {stats['activeTasks']}\nLast Updated Task: {stats['lastUpdatedTask']}\nCompletion Rate: {stats['completionPercentage']}%"
 
-@mcp.tool(title="add_task")
+@mcp.tool(title="add_task_<%= item_id %>")
 async def add_task(
+    id: Any,
     text: str = Field("Text of the task to add"), 
     # notes: str = None, 
     # completed: bool = False
@@ -69,6 +70,7 @@ async def add_task(
     due_date = now + timedelta(days=7)
     todo_data = {
         "task": {
+            "session_id": id,
             "text": text,
             "priority": "medium",
             "due_date": due_date.date().isoformat(),
@@ -211,11 +213,13 @@ def close_any_forms() -> list[UIResource]:
 
     return [ui_resource]
 
-@mcp.tool(title="show_stats_window")
-async def show_stats_window() -> list[UIResource]:
+@mcp.tool(title="show_stats_window_<%= item_id %>")
+async def show_stats_window(
+    id: Any
+) -> list[UIResource]:
     """Show Todo MCP-UI stats window"""
     # get stats from API
-    todo_stats = await make_request("GET", f"/tasks-stats")
+    todo_stats = await make_request("GET", f"/tasks-stats?session_id={id}")
     stats_text = "</tr>".join([f"<tr><td align='left'>{k}</td><td>{todo_stats[k]}</td>" for k in todo_stats])
     stats_text = html.escape(f"<table>{stats_text}</table>")
 

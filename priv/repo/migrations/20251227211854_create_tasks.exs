@@ -3,6 +3,7 @@ defmodule TodoMcpUi.Repo.Migrations.CreateTasks do
 
   def change do
     create table(:tasks) do
+      add(:session_id, :string)
       add(:text, :string)
       add(:priority, :string)
       add(:completed, :boolean)

@@ -23,8 +23,8 @@
     <div id="add_task_id" class="flex items-center gap-4">
         <.input id="text_id" field={@form[:text]} type="text" value={@add_task_text} label="" placeholder="What need to be done?" class="input input-bordered h-10 mt-2 min-w-[50vh]"/>
         <.button class="btn btn-soft h-10" type="submit">Add Task</.button>
-        <.tool mcp={@todo_mcp} name="add_task" />
-        <.tool mcp={@todo_mcp} name="show_stats_window" />
+        <.tool mcp={@todo_mcp} name="add_task" item_id={@sess_id} item_label={@sess_id} />
+        <.tool mcp={@todo_mcp} name="show_stats_window" item_id={@sess_id} item_label={@sess_id} />
     </div>
     <ul id="tasks" phx-update="stream" class="list bg-base-100 rounded-box shadow-md">
         <%= for {dom_id, %{id: id, task: task}} <- @streams.tasks do %>
@@ -87,9 +87,9 @@
                         </svg>
                     </.link>
                 </div>
-                <.tool mcp={@todo_mcp} name="complete_task" item_id={id} item_label={task.text} />
-                <.tool mcp={@todo_mcp} name="remove_task" item_id={id} item_label={task.text} />
-                <.tool mcp={@todo_mcp} name="show_update_task_form" item_id={id} item_label={task.text} />
+                <.tool mcp={@todo_mcp} name="complete_task" item_id={"#{@sess_id}_#{id}"} item_label={task.text} />
+                <.tool mcp={@todo_mcp} name="remove_task" item_id={"#{@sess_id}_#{id}"} item_label={task.text} />
+                <.tool mcp={@todo_mcp} name="show_update_task_form" item_id={"#{@sess_id}_#{id}"} item_label={task.text} />
 
             </li>
         <% end %>

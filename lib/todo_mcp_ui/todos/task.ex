@@ -3,6 +3,7 @@ defmodule TodoMcpUi.Todos.Task do
   import Ecto.Changeset
 
   schema "tasks" do
+    field :session_id, :string
     field :text, :string
     field :priority, Ecto.Enum, values: [:low, :medium, :high], default: :medium
     field :completed, :boolean
@@ -15,7 +16,7 @@ defmodule TodoMcpUi.Todos.Task do
   @doc false
   def changeset(task, attrs) do
     task
-    |> cast(attrs, [:text, :priority, :completed, :due_date, :notes])
-    |> validate_required([:text])
+    |> cast(attrs, [:session_id, :text, :priority, :completed, :due_date, :notes])
+    |> validate_required([:session_id, :text])
   end
 end

@@ -13,8 +13,45 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
 
     end
 
+    socket =
+      case Map.get(session, "_csrf_token") do
+        nil ->
+          :ok =
+            :secret_key_base
+            |> socket.endpoint.config
+            |> Plug.CSRFProtection.load_state(nil)
+
+          token = Plug.CSRFProtection.dump_state()
+          session = Map.put(session, "_csrf_token", token)
+
+          {:ok, socket} = mount(params, session, socket)
+          socket
+
+        session_state ->
+          connect_params = Phoenix.LiveView.get_connect_params(socket) || %{}
+          csrf_token = Map.get(connect_params, "_csrf_token")
+          loading? = is_nil(csrf_token)
+
+          valid_token? =
+            Plug.CSRFProtection.valid_state_and_csrf_token?(
+              session_state,
+              csrf_token
+            )
+
+          state =
+            case {loading?, valid_token?} do
+              {true, false} -> :loading
+              {false, true} -> :complete
+              _csrf_attack -> :error
+            end
+
+          socket
+          |> assign(mount: state)
+          |> assign(sess_id: session["_csrf_token"])
+      end
+
     tasks =
-      Todos.list_tasks()
+      Todos.list_tasks(%{"session_id" => socket.assigns.sess_id})
       # |> Enum.with_index()
       |> Enum.map(fn t -> %{id: t.id, task: t} end)
 
@@ -22,7 +59,7 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
       :ok,
       socket
       |> assign(:add_task_text, nil)
-      |> assign(:stats, stats())
+      |> assign(:stats, stats(socket.assigns.sess_id))
       |> assign(:current_date, current_date())
       |> assign(:resource, nil)
       |> assign(:todo_mcp, TodoMcpUiMCP.Clients.TodoAppMCP)
@@ -97,18 +134,18 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
       today_date = DateTime.to_date(today)
       due_date = Date.shift(today_date, week: 1)
 
-      {:ok, task} = Todos.create_task(%{"completed" => false, "text" => text, "priority" => "medium", "due_date" => due_date, "notes" => ""})
+      {:ok, task} = Todos.create_task(%{"session_id" => socket.assigns.sess_id, "completed" => false, "text" => text, "priority" => "medium", "due_date" => due_date, "notes" => ""})
       tsk = %{id: task.id, task: task}
       {:noreply,
         socket
-          |> assign(:stats, stats())
+          |> assign(:stats, stats(socket.assigns.sess_id))
           |> assign(:current_date, current_date())
           |> assign(:add_task_text, nil)
           |> stream_insert(:tasks, tsk)}
     else
       {:noreply,
         socket
-          |> assign(:stats, stats())
+          |> assign(:stats, stats(socket.assigns.sess_id))
           |> assign(:current_date, current_date())
       }
     end
@@ -127,7 +164,7 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
 
     {:noreply,
       socket
-        |> assign(:stats, stats())
+        |> assign(:stats, stats(socket.assigns.sess_id))
         |> assign(:current_date, current_date())
         |> stream_insert(:tasks, task)}
   end
@@ -140,7 +177,7 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
 
     {:noreply,
       socket
-        |> assign(:stats, stats())
+        |> assign(:stats, stats(socket.assigns.sess_id))
         |> assign(:current_date, current_date())
         |> stream_delete(:tasks, tsk)}
   end
@@ -165,19 +202,19 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
       case Map.get(res, "tool") do
         "add_task" ->
           socket
-            |> assign(:stats, stats())
+            |> assign(:stats, stats(socket.assigns.sess_id))
             |> assign(:current_date, current_date())
             |> stream_insert(:tasks, maybe_extract_item(res))
 
         "complete_task" ->
           socket
-            |> assign(:stats, stats())
+            |> assign(:stats, stats(socket.assigns.sess_id))
             |> assign(:current_date, current_date())
             |> stream_insert(:tasks, maybe_extract_item(res))
 
         "remove_task" ->
           socket
-            |> assign(:stats, stats())
+            |> assign(:stats, stats(socket.assigns.sess_id))
             |> assign(:current_date, current_date())
             |> stream_delete(:tasks, maybe_extract_item(res))
 
@@ -192,11 +229,11 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
       end
     else
       tasks =
-        Todos.list_tasks()
+        Todos.list_tasks(%{"session_id" => socket.assigns.sess_id})
         |> Enum.map(fn t -> %{id: t.id, task: t} end)
 
       socket
-        |> assign(:stats, stats())
+        |> assign(:stats, stats(socket.assigns.sess_id))
         |> assign(:current_date, current_date())
         |> stream(:tasks, tasks, reset: true)
     end
@@ -271,8 +308,8 @@ defmodule TodoMcpUiWeb.TaskLive.Index do
     if not is_nil(notes) and notes != "", do: "tooltip hover:tooltip-open tooltip-right tooltip-secondary", else: "hidden"
   end
 
-  defp stats() do
-    Todos.get_stats() |> Jason.encode!()
+  defp stats(session_id) do
+    Todos.get_stats(session_id) |> Jason.encode!()
   end
 
   defp current_date() do

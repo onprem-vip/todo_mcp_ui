@@ -7,7 +7,8 @@ defmodule TodoMcpUiWeb.TaskController do
   action_fallback TodoMcpUiWeb.FallbackController
 
   def index(conn, _params) do
-    tasks = Todos.list_tasks()
+    session_id = get_session(conn, :session_id) || Plug.CSRFProtection.get_csrf_token()
+    tasks = Todos.list_tasks(%{"session_id" => session_id})
     render(conn, :index, tasks: tasks)
   end
 
@@ -41,8 +42,8 @@ defmodule TodoMcpUiWeb.TaskController do
     end
   end
 
-  def show_stats(conn, _params) do
-    stats = Todos.get_stats()
+  def show_stats(conn, _params = %{"session_id" => session_id}) do
+    stats = Todos.get_stats(session_id)
     json(conn, stats)
   end
 end

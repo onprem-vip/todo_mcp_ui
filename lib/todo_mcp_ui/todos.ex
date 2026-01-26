@@ -9,22 +9,34 @@ defmodule TodoMcpUi.Todos do
   alias TodoMcpUi.Todos.Task
 
   @doc """
-  Returns the list of tasks.
+  Returns the list of tasks by session_id and completed status.
 
   ## Examples
 
-      iex> list_tasks()
+      iex> list_tasks(%{"session_id" => session_id, "completed" => completed})
       [%Task{}, ...]
 
   """
-  def list_tasks do
-    Repo.all(Task)
+  def list_tasks(%{"session_id" => session_id, "completed" => completed}) do
+    query = from t in Task,
+      where: t.session_id == ^session_id and t.completed == ^completed
+    Repo.all(query)
   end
 
   def list_tasks(%{"completed" => completed}) do
     query = from t in Task,
       where: t.completed == ^completed
     Repo.all(query)
+  end
+
+  def list_tasks(%{"session_id" => session_id}) do
+    query = from t in Task,
+      where: t.session_id == ^session_id
+    Repo.all(query)
+  end
+
+  def list_tasks do
+    Repo.all(Task)
   end
 
   @doc """
@@ -41,23 +53,26 @@ defmodule TodoMcpUi.Todos do
       ** (Ecto.NoResultsError)
 
   """
-  def get_task!(id), do: Repo.get!(Task, id)
+  def get_task!(id) do
+    [session_id, id] = String.split(id, "_", trim: true)
+    Repo.get_by!(Task, [session_id: session_id, id: id])
+  end
 
-  def get_last_task() do
+  def get_last_task(session_id) do
     query = from t in Task,
-      where: t.inserted_at in subquery(from t2 in Task, select: max(t2.inserted_at))
+      where: t.inserted_at in subquery(from t2 in Task, where: t2.session_id == ^session_id, select: max(t2.inserted_at))
 
     Repo.one(query)
   end
 
-  def get_stats() do
+  def get_stats(session_id) do
     %{
-      "totalTasks" => list_tasks() |> length(),
-      "completedTasks" => list_tasks(%{"completed" => true}) |> length(),
-      "activeTasks" => list_tasks(%{"completed" => false}) |> length(),
-      "lastUpdatedTask" => (if not is_nil(get_last_task()), do: get_last_task() |> Map.get(:updated_at)),
-      "completionPercentage" => (if (list_tasks() |> length()) != 0,
-        do: (list_tasks(%{"completed" => true}) |> length()) / (list_tasks() |> length()),
+      "totalTasks" => list_tasks(%{"session_id" => session_id}) |> length(),
+      "completedTasks" => list_tasks(%{"session_id" => session_id, "completed" => true}) |> length(),
+      "activeTasks" => list_tasks(%{"session_id" => session_id, "completed" => false}) |> length(),
+      "lastUpdatedTask" => (if not is_nil(get_last_task(session_id)), do: get_last_task(session_id) |> Map.get(:updated_at)),
+      "completionPercentage" => (if (list_tasks(%{"session_id" => session_id}) |> length()) != 0,
+        do: (list_tasks(%{"session_id" => session_id, "completed" => true}) |> length()) / (list_tasks(%{"session_id" => session_id}) |> length()),
         else: 0
         )
     }
